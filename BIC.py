@@ -22,7 +22,22 @@ def loglike(x_obs, y_obs, sigma_y_obs, betas, model):
     for i in range(n_obs):
         l += -0.5*(y_obs[i]-model(x_obs[i,:], betas))**2/sigma_y_obs[i]**2
     return l
-    
+
+def condiciones(next_betas,model):
+    if model_A:
+        return 1
+    if model_B:
+        if next_betas[2]>0:
+            return 1
+        else:
+            return 0
+    if model_C:
+        if next_betas[2]>0 and next_betas[4]>0:
+            return 1
+        else:
+            return 0
+        
+        
 def run_mcmc(data_file, n_dim, n_iterations, model, escala):
     
     data = np.loadtxt(data_file)
@@ -38,7 +53,7 @@ def run_mcmc(data_file, n_dim, n_iterations, model, escala):
         loglike_current = loglike(x_obs, y_obs, sigma_y_obs, current_betas, model)
         loglike_next = loglike(x_obs, y_obs, sigma_y_obs, next_betas, model)
 
-        r = np.min([np.exp(loglike_next - loglike_current), 1.0])
+        r = np.min([np.exp(loglike_next - loglike_current), 1.0])*condiciones(next_betas,model)
         alpha = np.random.random()
 
         if alpha < r:
@@ -69,18 +84,18 @@ def graficar(n_dim, betas, nombre, model, results, BIC):
 results_A = run_mcmc("data_to_fit.txt", 2,200000, model_A, 0.01)
 betas_A = results_A['betas']
 B_C_MA_2 = -loglike(results_A['x_obs'], results_A['y_obs'], results_A['sigma_y'], np.mean(betas_A, axis = 0), model_A) + 3/2*np.log(31)
-graficar(2, betas_A, 'resultado_A.png', model_A, results_A,B_C_MA_2)
+graficar(2, betas_A, 'modelo_A.png', model_A, results_A,B_C_MA_2)
 
 
 results_B = run_mcmc("data_to_fit.txt", 2,30000, model_B,0.1)
 betas_B = results_B['betas']
 B_C_MB_2 = -loglike(results_B['x_obs'], results_B['y_obs'], results_B['sigma_y'], np.mean(betas_B, axis = 0), model_B) + 3/2*np.log(31)
-graficar(2, betas_B, 'resultado_B.png', model_B, results_B,B_C_MB_2)
+graficar(2, betas_B, 'modelo_B.png', model_B, results_B,B_C_MB_2)
 
 results_C = run_mcmc("data_to_fit.txt", 4,50000, model_C,0.1)
 betas_C = results_C['betas']
 B_C_MC_2 = -loglike(results_C['x_obs'], results_C['y_obs'], results_C['sigma_y'], np.mean(betas_C, axis = 0), model_C) + 5/2*np.log(31)
-graficar(4, betas_C, 'resultado_C.png', model_C, results_C,B_C_MC_2)
+graficar(4, betas_C, 'modelo_C.png', model_C, results_C,B_C_MC_2)
 
 
 
